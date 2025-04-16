@@ -177,7 +177,11 @@ func (f *Fs) getFolderList(ctx context.Context, path string) (*FolderListRespons
 		if err != nil {
 			return shouldRetry(err), fmt.Errorf("failed to list directory: %w", err)
 		}
-		defer resp.Body.Close()
+		defer func() {
+			if err := resp.Body.Close(); err != nil {
+				fs.Logf(nil, "Failed to close response body: %v", err)
+			}
+		}()
 
 		body, err = io.ReadAll(resp.Body)
 		if err != nil {
@@ -224,7 +228,11 @@ func (f *Fs) deleteFolder(ctx context.Context, fullPath string) error {
 		if err != nil {
 			return fserrors.ShouldRetry(err), err
 		}
-		defer resp.Body.Close()
+		defer func() {
+			if err := resp.Body.Close(); err != nil {
+				fs.Logf(nil, "Failed to close response body: %v", err)
+			}
+		}()
 
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
@@ -267,7 +275,11 @@ func (f *Fs) getDirectLink(ctx context.Context, filePath string) (string, int64,
 		if err != nil {
 			return shouldRetry(err), fmt.Errorf("failed to fetch direct link: %w", err)
 		}
-		defer resp.Body.Close()
+		defer func() {
+			if err := resp.Body.Close(); err != nil {
+				fs.Logf(nil, "Failed to close response body: %v", err)
+			}
+		}()
 
 		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 			return false, fmt.Errorf("error decoding response: %w", err)
@@ -510,7 +522,11 @@ func (f *Fs) getFileInfo(ctx context.Context, fileCode string) (*FileInfoRespons
 		if err != nil {
 			return shouldRetry(err), fmt.Errorf("failed to fetch file info: %w", err)
 		}
-		defer resp.Body.Close()
+		defer func() {
+			if err := resp.Body.Close(); err != nil {
+				fs.Logf(nil, "Failed to close response body: %v", err)
+			}
+		}()
 
 		body, err = io.ReadAll(resp.Body)
 		if err != nil {

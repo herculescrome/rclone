@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -17,7 +16,7 @@ import (
 	"github.com/rclone/rclone/fs/hash"
 )
 
-var FileNotFound error = errors.New("file not found")
+var ErrFileNotFound error = errors.New("file not found")
 
 var commandHelp = []fs.CommandHelp{{
 	Name:  "rename",
@@ -70,7 +69,7 @@ func (f *Fs) getFileCode(ctx context.Context, filePath string) (string, error) {
 		}
 	}
 
-	return "", FileNotFound
+	return "", ErrFileNotFound
 }
 
 // Features returns the optional features of this Fs
@@ -166,16 +165,6 @@ func isFileCode(s string) bool {
 		}
 	}
 	return true
-}
-
-// convertSizeStringToInt64 parses a string size to int64, returning 0 if the parsing fails.
-func convertSizeStringToInt64(sizeStr string) int64 {
-	size, err := strconv.ParseInt(sizeStr, 10, 64)
-	if err != nil {
-		fs.Errorf(nil, "Error parsing size '%s': %v", sizeStr, err)
-		return 0
-	}
-	return size
 }
 
 func shouldRetry(err error) bool {

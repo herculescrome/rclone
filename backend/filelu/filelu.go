@@ -133,7 +133,7 @@ func NewFs(ctx context.Context, name string, root string, m configmap.Mapper) (f
 
 	if isFile {
 		code, err := f.getFileCode(ctx, root)
-		if errors.Is(err, FileNotFound) || errors.Is(err, fs.ErrorDirNotFound) {
+		if errors.Is(err, ErrFileNotFound) || errors.Is(err, fs.ErrorDirNotFound) {
 			return f, nil
 		}
 
@@ -494,7 +494,11 @@ func (f *Fs) getFolderID(ctx context.Context, dir string) (int, error) {
 			if err != nil {
 				return shouldRetry(err), fmt.Errorf("failed to list directory: %w", err)
 			}
-			defer resp.Body.Close()
+			defer func() {
+				if err := resp.Body.Close(); err != nil {
+					fs.Fatalf(nil, "Failed to close response body: %v", err)
+				}
+			}()
 
 			body, err = io.ReadAll(resp.Body)
 			if err != nil {
@@ -628,13 +632,21 @@ func (f *Fs) MoveTo(ctx context.Context, src fs.Object, destinationPath string) 
 		if err != nil {
 			return nil, fmt.Errorf("failed to open source file: %w", err)
 		}
-		defer reader.Close()
+		defer func() {
+			if err := reader.Close(); err != nil {
+				fs.Logf(nil, "Failed to close file body: %v", err)
+			}
+		}()
 
 		dest, err := os.Create(destinationPath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create destination file: %w", err)
 		}
-		defer dest.Close()
+		defer func() {
+			if err := dest.Close(); err != nil {
+				fs.Logf(nil, "Failed to close file body: %v", err)
+			}
+		}()
 
 		if _, err := io.Copy(dest, reader); err != nil {
 			return nil, fmt.Errorf("failed to copy file content: %w", err)
@@ -651,7 +663,11 @@ func (f *Fs) MoveTo(ctx context.Context, src fs.Object, destinationPath string) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to open source object: %w", err)
 	}
-	defer reader.Close()
+	defer func() {
+		if err := reader.Close(); err != nil {
+			fs.Logf(nil, "Failed to close file body: %v", err)
+		}
+	}()
 
 	err = f.UploadFile(ctx, reader, destinationPath)
 	if err != nil {
@@ -688,13 +704,22 @@ func (f *Fs) MoveToLocal(ctx context.Context, remote string, localPath string) e
 	if err != nil {
 		return fmt.Errorf("failed to open file for download: %w", err)
 	}
-	defer reader.Close()
+	defer func() {
+		if err := reader.Close(); err != nil {
+			fs.Logf(nil, "Failed to close file body: %v", err)
+		}
+	}()
 
 	outFile, err := os.Create(localPath)
 	if err != nil {
 		return fmt.Errorf("failed to create local file %q: %w", localPath, err)
 	}
-	defer outFile.Close()
+
+	defer func() {
+		if err := outFile.Close(); err != nil {
+			fs.Logf(nil, "Failed to close file body: %v", err)
+		}
+	}()
 
 	if _, err := io.Copy(outFile, reader); err != nil {
 		return fmt.Errorf("failed to copy data to local file: %w", err)
