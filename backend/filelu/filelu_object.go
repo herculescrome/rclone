@@ -110,7 +110,11 @@ func (o *Object) Open(ctx context.Context, options ...fs.OpenOption) (io.ReadClo
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			defer resp.Body.Close()
+			defer func() {
+				if err := resp.Body.Close(); err != nil {
+					fs.Logf(nil, "Failed to close response body: %v", err)
+				}
+			}()
 			return false, fmt.Errorf("failed to download file: HTTP %d", resp.StatusCode)
 		}
 
@@ -207,7 +211,11 @@ func (o *Object) Hash(ctx context.Context, t hash.Type) (string, error) {
 		if err != nil {
 			return shouldRetry(err), err
 		}
-		defer resp.Body.Close()
+		defer func() {
+			if err := resp.Body.Close(); err != nil {
+				fs.Logf(nil, "Failed to close response body: %v", err)
+			}
+		}()
 
 		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 			return false, err

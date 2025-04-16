@@ -77,11 +77,11 @@ func (f *Fs) Features() *fs.Features {
 	return f.features
 }
 
-func (f *Fs) FromStandardPath(remote string) string {
+func (f *Fs) fromStandardPath(remote string) string {
 	return encodePath(remote)
 }
 
-func (f *Fs) ToStandardPath(remote string) string {
+func (f *Fs) toStandardPath(remote string) string {
 	return decodePath(remote)
 }
 

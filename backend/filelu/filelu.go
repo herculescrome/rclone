@@ -331,6 +331,7 @@ func (f *Fs) Remove(ctx context.Context, dir string) error {
 	return nil
 }
 
+// Purge deletes the directory and all its contents
 func (f *Fs) Purge(ctx context.Context, dir string) error {
 
 	fullPath := path.Join(f.root, dir)
@@ -384,7 +385,7 @@ func (f *Fs) List(ctx context.Context, dir string) (fs.DirEntries, error) {
 			continue
 		}
 
-		decodedPath := f.ToStandardPath(folder.Path)
+		decodedPath := f.toStandardPath(folder.Path)
 		paths := strings.Split(decodedPath, fullPath+"/")
 		remote := paths[0]
 		if len(paths) > 1 {
