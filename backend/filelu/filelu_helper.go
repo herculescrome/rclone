@@ -16,6 +16,7 @@ import (
 	"github.com/rclone/rclone/fs/hash"
 )
 
+// ErrFileNotFound represent file not found error
 var ErrFileNotFound error = errors.New("file not found")
 
 var commandHelp = []fs.CommandHelp{{

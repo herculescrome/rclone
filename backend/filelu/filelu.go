@@ -352,7 +352,6 @@ func (f *Fs) Purge(ctx context.Context, dir string) error {
 // List returns a list of files and folders
 // List returns a list of files and folders for the given directory
 func (f *Fs) List(ctx context.Context, dir string) (fs.DirEntries, error) {
-
 	if f.isFile {
 		obj, err := f.NewObject(ctx, f.targetFile)
 		if errors.Is(err, fs.ErrorObjectNotFound) {
@@ -363,7 +362,6 @@ func (f *Fs) List(ctx context.Context, dir string) (fs.DirEntries, error) {
 		}
 		return []fs.DirEntry{obj}, nil
 	}
-
 	// Compose full path for API call
 	fullPath := path.Join(f.root, dir)
 	fullPath = "/" + strings.Trim(fullPath, "/")
@@ -378,7 +376,6 @@ func (f *Fs) List(ctx context.Context, dir string) (fs.DirEntries, error) {
 	}
 
 	fldMap := map[string]bool{}
-
 	for _, folder := range result.Result.Folders {
 		fldMap[folder.FldID.String()] = true
 		if f.root == "" && dir == "" && strings.Contains(folder.Path, "/") {
@@ -404,7 +401,6 @@ func (f *Fs) List(ctx context.Context, dir string) (fs.DirEntries, error) {
 		remotePathWithoutRoot = strings.TrimPrefix(remotePathWithoutRoot, "/")
 		entries = append(entries, fs.NewDir(remotePathWithoutRoot, time.Now()))
 	}
-
 	for _, file := range result.Result.Files {
 		if _, ok := fldMap[file.FldID.String()]; ok {
 			continue
@@ -412,23 +408,14 @@ func (f *Fs) List(ctx context.Context, dir string) (fs.DirEntries, error) {
 		remote := path.Join(dir, file.Name)
 		// trim leading slashes
 		remote = strings.TrimPrefix(remote, "/")
-		size := int64(0)
-
-		if fileInfo, err := f.getFileInfo(ctx, file.FileCode); err == nil {
-			if len(fileInfo.Result) > 0 {
-				size, _ = strconv.ParseInt(fileInfo.Result[0].Size, 10, 64)
-			}
-		}
-
 		obj := &Object{
 			fs:      f,
 			remote:  remote,
-			size:    size,
+			size:    file.Size,
 			modTime: time.Now(),
 		}
 		entries = append(entries, obj)
 	}
-
 	return entries, nil
 }
 
