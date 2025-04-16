@@ -172,7 +172,7 @@ func isFileCode(s string) bool {
 func convertSizeStringToInt64(sizeStr string) int64 {
 	size, err := strconv.ParseInt(sizeStr, 10, 64)
 	if err != nil {
-		fs.Debugf(nil, "Error parsing size '%s': %v", sizeStr, err)
+		fs.Errorf(nil, "Error parsing size '%s': %v", sizeStr, err)
 		return 0
 	}
 	return size
@@ -192,6 +192,5 @@ func DeleteLocalFile(localPath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to delete local file %q: %w", localPath, err)
 	}
-	fs.Debugf(nil, "DeleteLocalFile: successfully deleted local file %q", localPath)
 	return nil
 }

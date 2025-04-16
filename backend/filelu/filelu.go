@@ -83,8 +83,6 @@ type Fs struct {
 
 // NewFs creates a new Fs object for FileLu
 func NewFs(ctx context.Context, name string, root string, m configmap.Mapper) (fs.Fs, error) {
-	fs.Debugf(nil, "NewFs: Starting with root = %q, name = %q", root, name)
-
 	opt := new(Options)
 	err := configstruct.Set(m, opt)
 	if err != nil {
@@ -148,21 +146,11 @@ func NewFs(ctx context.Context, name string, root string, m configmap.Mapper) (f
 		}
 	}
 
-	fs.Debugf(nil, "NewFs: Created filesystem with root path %q, isFile=%v, targetFile=%q", f.root, isFile, filename)
 	return f, nil
 }
 
 // Mkdir to create directory on remote server.
 func (f *Fs) Mkdir(ctx context.Context, dir string) error {
-	fs.Debugf(f, "Mkdir: Starting directory creation for dir=%q, root=%q", dir, f.root)
-
-	// if dir == "" {
-	// 	dir = f.root
-	// 	if dir == "" {
-	// 		return fmt.Errorf("directory name cannot be empty")
-	// 	}
-	// }
-
 	fullPath := path.Clean(f.root + "/" + dir)
 	_, err := f.createFolder(ctx, fullPath)
 	return err
@@ -170,7 +158,6 @@ func (f *Fs) Mkdir(ctx context.Context, dir string) error {
 
 // DeleteFile sends an API request to remove a file from FileLu
 func (f *Fs) DeleteFile(ctx context.Context, filePath string) error {
-	fs.Debugf(f, "DeleteFile: Attempting to delete file at path %q", filePath)
 
 	filePath = "/" + strings.Trim(filePath, "/")
 	return f.deleteFile(ctx, filePath)
@@ -199,8 +186,6 @@ func (f *Fs) Command(ctx context.Context, name string, args []string, opt map[st
 		// Remove any directory path from new name
 		newName = path.Base(newName)
 
-		fs.Debugf(f, "Command rename: Renaming file at path %q to %q", filePath, newName)
-
 		// Perform the rename operation
 		err := f.renameFile(ctx, filePath, newName)
 		if err != nil {
@@ -218,13 +203,11 @@ func (f *Fs) Command(ctx context.Context, name string, args []string, opt map[st
 		var sourcePath string
 		if f.isFile {
 			sourcePath = path.Join(f.root, f.targetFile)
-			fs.Debugf(f, "Command movefile: Source path constructed as %q", sourcePath)
 		} else {
 			return nil, fmt.Errorf("please specify a file to move")
 		}
 
 		destinationPath := args[0]
-		fs.Debugf(f, "Command movefile: Moving file from %q to folder %q", sourcePath, destinationPath)
 
 		err := f.moveFileToDestination(ctx, sourcePath, destinationPath)
 		if err != nil {
@@ -246,8 +229,6 @@ func (f *Fs) Command(ctx context.Context, name string, args []string, opt map[st
 		sourcePath := f.root
 		destinationPath := args[0]
 
-		fs.Debugf(f, "Command movefolder: Moving folder from %q to folder %q", sourcePath, destinationPath)
-
 		err := f.moveFolderToDestination(ctx, sourcePath, destinationPath)
 		if err != nil {
 			return nil, fmt.Errorf("folder move failed: %w", err)
@@ -257,7 +238,6 @@ func (f *Fs) Command(ctx context.Context, name string, args []string, opt map[st
 
 	// Handle renamefolder case in Command method
 	case "renamefolder":
-		fs.Debugf(f, "renamefolder: Received arguments: %+v", args)
 
 		if len(args) != 1 {
 			return nil, fmt.Errorf("renamefolder command requires new_name argument")
@@ -265,8 +245,6 @@ func (f *Fs) Command(ctx context.Context, name string, args []string, opt map[st
 
 		folderPath := f.root
 		newName := args[0]
-
-		fs.Debugf(f, "renamefolder: Renaming folder at path %q to %q", folderPath, newName)
 
 		// Perform the folder rename operation
 		err := f.renameFolder(ctx, folderPath, newName)
@@ -354,7 +332,6 @@ func (f *Fs) Remove(ctx context.Context, dir string) error {
 }
 
 func (f *Fs) Purge(ctx context.Context, dir string) error {
-	fs.Debugf(f, "Purge: Starting for dir=%q", dir)
 
 	fullPath := path.Join(f.root, dir)
 	if fullPath != "" {
@@ -374,7 +351,6 @@ func (f *Fs) Purge(ctx context.Context, dir string) error {
 // List returns a list of files and folders
 // List returns a list of files and folders for the given directory
 func (f *Fs) List(ctx context.Context, dir string) (fs.DirEntries, error) {
-	fs.Debugf(f, "List: Starting for directory %q with root %q", dir, f.root)
 
 	if f.isFile {
 		obj, err := f.NewObject(ctx, f.targetFile)
@@ -457,7 +433,6 @@ func (f *Fs) List(ctx context.Context, dir string) (fs.DirEntries, error) {
 
 // ListR lists the objects and directories of the Fs recursively
 func (f *Fs) ListR(ctx context.Context, dir string, callback fs.ListRCallback) error {
-	fs.Debugf(f, "ListR: Starting recursive listing from %q", dir)
 
 	return f.walkDir(ctx, dir, callback)
 }
@@ -497,8 +472,6 @@ func (f *Fs) getFolderID(ctx context.Context, dir string) (int, error) {
 	if folderID, err := strconv.Atoi(dir); err == nil {
 		return folderID, nil
 	}
-
-	fs.Debugf(f, "getFolderID: Resolving folder ID for directory=%q", dir)
 
 	parts := strings.Split(dir, "/")
 	currentID := 0
@@ -571,7 +544,6 @@ func (f *Fs) getFolderID(ctx context.Context, dir string) (int, error) {
 		}
 	}
 
-	fs.Debugf(f, "getFolderID: Resolved folder ID=%d for directory=%q", currentID, dir)
 	return currentID, nil
 }
 
@@ -598,7 +570,6 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 
 // Move the objects and directories
 func (f *Fs) Move(ctx context.Context, src fs.Object, remote string) (fs.Object, error) {
-	fs.Debugf(f, "Move: starting directory move for %q to %q", src.Remote(), remote)
 	// Check if the source is a directory
 	if srcDir, ok := src.(fs.Directory); ok {
 		// Recursively move all contents
@@ -606,7 +577,6 @@ func (f *Fs) Move(ctx context.Context, src fs.Object, remote string) (fs.Object,
 		if err != nil {
 			return nil, fmt.Errorf("failed to move directory contents: %w", err)
 		}
-		fs.Debugf(f, "Move: successfully moved directory %q to %q", src.Remote(), remote)
 		return src, nil
 	}
 
@@ -647,7 +617,6 @@ func (f *Fs) moveDirectoryContents(ctx context.Context, dir string, dest string)
 
 // MoveTo moves the file to the specified location
 func (f *Fs) MoveTo(ctx context.Context, src fs.Object, destinationPath string) (fs.Object, error) {
-	fs.Debugf(f, "MoveTo: Starting move for %q to %q", src.Remote(), destinationPath)
 
 	if strings.HasPrefix(destinationPath, "/") || strings.Contains(destinationPath, ":\\") {
 		dir := path.Dir(destinationPath)
@@ -704,7 +673,6 @@ func (f *Fs) MoveTo(ctx context.Context, src fs.Object, destinationPath string) 
 // MoveToLocal moves the file or folder to the local file system.
 // It implements the fs.Fs interface and performs the move operation locally.
 func (f *Fs) MoveToLocal(ctx context.Context, remote string, localPath string) error {
-	fs.Debugf(f, "MoveToLocal: starting move from FileLu %q to local %q", remote, localPath)
 
 	obj, err := f.NewObject(ctx, remote)
 	if err != nil {
@@ -736,19 +704,16 @@ func (f *Fs) MoveToLocal(ctx context.Context, remote string, localPath string) e
 		return fmt.Errorf("failed to delete file from FileLu after move: %w", err)
 	}
 
-	fs.Debugf(f, "MoveToLocal: successfully moved file from FileLu %q to local %q", remote, localPath)
 	return nil
 }
 
 // Rmdir removes a directory
 func (f *Fs) Rmdir(ctx context.Context, dir string) error {
-	fs.Debugf(f, "Rmdir: Starting for dir=%q", dir)
 
 	fullPath := path.Join(f.root, dir)
 	if fullPath != "" {
 		fullPath = "/" + strings.Trim(fullPath, "/")
 	}
-	fs.Debugf(f, "Rmdir: Using folder_path = %q", fullPath)
 
 	// Step 1: Check if folder is empty
 	listResp, err := f.getFolderList(ctx, fullPath)

@@ -166,8 +166,6 @@ func (f *Fs) getFolderList(ctx context.Context, path string) (*FolderListRespons
 		url.QueryEscape(f.opt.Key),
 	)
 
-	fs.Debugf(f, "List: Fetching from URL: %s", apiURL)
-
 	var body []byte
 	err := f.pacer.Call(func() (bool, error) {
 		req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
@@ -191,8 +189,6 @@ func (f *Fs) getFolderList(ctx context.Context, path string) (*FolderListRespons
 	if err != nil {
 		return nil, err
 	}
-
-	fs.Debugf(f, "List: Response body: %s", string(body))
 
 	var response FolderListResponse
 	if err := json.NewDecoder(bytes.NewReader(body)).Decode(&response); err != nil {
@@ -234,7 +230,6 @@ func (f *Fs) deleteFolder(ctx context.Context, fullPath string) error {
 		if err != nil {
 			return false, err
 		}
-		fs.Debugf(f, "Rmdir: folder/delete response: %s", string(body))
 
 		if err := json.Unmarshal(body, &delResp); err != nil {
 			return false, fmt.Errorf("error decoding delete response: %w", err)
@@ -260,8 +255,6 @@ func (f *Fs) getDirectLink(ctx context.Context, filePath string) (string, int64,
 		url.QueryEscape(filePath),
 		url.QueryEscape(f.opt.Key),
 	)
-
-	fs.Debugf(f, "getDirectLink: fetching direct link for file path %q", filePath)
 
 	result := FileDirectLinkResponse{}
 	err := f.pacer.Call(func() (bool, error) {
@@ -290,7 +283,6 @@ func (f *Fs) getDirectLink(ctx context.Context, filePath string) (string, int64,
 		return "", 0, err
 	}
 
-	fs.Debugf(f, "getDirectLink: obtained URL %q with size %d", result.Result.URL, result.Result.Size)
 	return result.Result.URL, result.Result.Size, nil
 }
 
@@ -373,8 +365,6 @@ func (f *Fs) moveFolderToDestination(ctx context.Context, folderPath string, des
 		url.QueryEscape(f.opt.Key),
 	)
 
-	fs.Debugf(f, "moveFolderToDestination: Sending move request to %s", apiURL)
-
 	req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create move folder request: %w", err)
@@ -431,8 +421,6 @@ func (f *Fs) moveFileToDestination(ctx context.Context, filePath string, destina
 		url.QueryEscape(destinationFolderPath),
 		url.QueryEscape(f.opt.Key),
 	)
-
-	fs.Debugf(f, "moveFileToDestination: Sending move request to %s", apiURL)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
 	if err != nil {
@@ -510,7 +498,6 @@ func (f *Fs) getFileInfo(ctx context.Context, fileCode string) (*FileInfoRespons
 	u.RawQuery = q.Encode()
 
 	apiURL := f.endpoint + "/file/info2?" + u.RawQuery
-	fs.Debugf(f, "NewObject: Fetching file info from %s", apiURL)
 
 	var body []byte
 	err := f.pacer.Call(func() (bool, error) {
@@ -536,7 +523,6 @@ func (f *Fs) getFileInfo(ctx context.Context, fileCode string) (*FileInfoRespons
 		return nil, err
 	}
 	result := FileInfoResponse{}
-	fs.Debugf(f, "NewObject: Response body: %s", string(body))
 
 	if err := json.NewDecoder(bytes.NewReader(body)).Decode(&result); err != nil {
 		return nil, fmt.Errorf("error decoding response: %w", err)

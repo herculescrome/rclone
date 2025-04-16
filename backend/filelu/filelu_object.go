@@ -28,7 +28,6 @@ type Object struct {
 
 // NewObject creates a new Object for the given remote path
 func (f *Fs) NewObject(ctx context.Context, remote string) (fs.Object, error) {
-	fs.Debugf(f, "NewObject: called with remote=%q", remote)
 
 	var filePath string
 	if f.isFile {
@@ -143,7 +142,6 @@ func (o *Object) Open(ctx context.Context, options ...fs.OpenOption) (io.ReadClo
 
 // Update updates the object with new data
 func (o *Object) Update(ctx context.Context, in io.Reader, src fs.ObjectInfo, options ...fs.OpenOption) error {
-	fs.Debugf(o.fs, "Update: Starting update for %q", o.remote)
 	if src.Size() <= 0 {
 		return fs.ErrorCantUploadEmptyFiles
 	}
@@ -158,7 +156,6 @@ func (o *Object) Update(ctx context.Context, in io.Reader, src fs.ObjectInfo, op
 
 // Remove deletes the object from FileLu
 func (o *Object) Remove(ctx context.Context) error {
-	fs.Debugf(o.fs, "Remove: Deleting file %q", o.remote)
 	fullPath := "/" + strings.Trim(path.Join(o.fs.root, o.remote), "/")
 
 	err := o.fs.deleteFile(ctx, fullPath)

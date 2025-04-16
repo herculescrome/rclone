@@ -17,7 +17,6 @@ import (
 
 // UploadFile uploads a file to FileLu
 func (f *Fs) UploadFile(ctx context.Context, fileContent io.Reader, fileFullPath string) error {
-	fs.Debugf(f, "Put: Starting upload for %q", fileFullPath)
 
 	directory := path.Dir(fileFullPath)
 	fileName := path.Base(fileFullPath)
@@ -107,7 +106,6 @@ func (f *Fs) getUploadServer(ctx context.Context) (string, string, error) {
 		return "", "", err
 	}
 
-	fs.Debugf(f, "Got upload server URL=%s and session ID=%s", result.Result, result.SessID)
 	return result.Result, result.SessID, nil
 }
 
